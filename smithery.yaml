@@ -1,0 +1,44 @@
+# Smithery configuration file for Shelf MCP Server
+# Documentation: https://smithery.ai/docs/build/project-config/smithery-yaml
+
+startCommand:
+  # Type of MCP server (stdio for Python FastMCP servers)
+  type: stdio
+  
+  # JSON Schema defining the configuration options
+  configSchema:
+    type: object
+    required:
+      - shelfApiKey
+    properties:
+      shelfApiKey:
+        type: string
+        title: "Shelf API Key"
+        description: "Your Shelf.im / DataMover API key. Contact team@koodos.com to request access."
+        pattern: "^[A-Za-z0-9_-]+$"
+      
+      apiBaseUrl:
+        type: string
+        title: "API Base URL"
+        description: "Base URL for the Shelf API (optional, defaults to https://api.shelf.im/v1)"
+        default: "https://api.shelf.im/v1"
+        pattern: "^https?://.+"
+  
+  # Function that produces the CLI command to start the MCP server
+  commandFunction: |
+    (config) => {
+      return {
+        command: 'python',
+        args: ['shelf_mcp_server.py'],
+        env: {
+          SHELF_API_KEY: config.shelfApiKey,
+          SHELF_API_BASE_URL: config.apiBaseUrl || 'https://api.shelf.im/v1',
+          PYTHONUNBUFFERED: '1'
+        }
+      };
+    }
+
+# Build configuration (optional for Python)
+build:
+  # Path for Docker build context if needed
+  dockerBuildPath: .

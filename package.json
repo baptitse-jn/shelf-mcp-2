@@ -1,0 +1,62 @@
+{
+  "name": "@your-username/shelf-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for accessing Shelf.im media consumption data",
+  "main": "shelf_mcp_server.py",
+  "scripts": {
+    "test": "python -m py_compile shelf_mcp_server.py",
+    "start": "python shelf_mcp_server.py",
+    "deploy": "smithery deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/shelf-mcp-server.git"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "shelf",
+    "shelfim",
+    "media",
+    "movies",
+    "music",
+    "books",
+    "ai",
+    "claude",
+    "anthropic"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-username/shelf-mcp-server/issues"
+  },
+  "homepage": "https://github.com/your-username/shelf-mcp-server#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.10.0"
+  },
+  "mcp": {
+    "type": "stdio",
+    "runtime": "python",
+    "configSchema": {
+      "type": "object",
+      "required": ["shelfApiKey"],
+      "properties": {
+        "shelfApiKey": {
+          "type": "string",
+          "description": "Your Shelf.im API key"
+        },
+        "apiBaseUrl": {
+          "type": "string",
+          "description": "API base URL",
+          "default": "https://api.shelf.im/v1"
+        }
+      }
+    }
+  },
+  "smithery": {
+    "registry": "https://smithery.ai",
+    "category": "data-analytics",
+    "tags": ["media", "personal-data", "entertainment"]
+  }
+}
