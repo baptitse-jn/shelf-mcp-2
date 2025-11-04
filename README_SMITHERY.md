@@ -156,12 +156,15 @@ Want to deploy a modified version or contribute?
    ```bash
    # Install dependencies
    pip install -r requirements.txt
-   
+
    # Set API key
    export SHELF_API_KEY="your-key-here"
-   
-   # Run server
-   python shelf_mcp_server.py
+
+   # Run HTTP server (default transport for Smithery)
+   python shelf_mcp_server.py --transport streamable-http --host 0.0.0.0 --port 8000
+
+   # Or run via stdio when testing with the MCP CLI locally
+   python shelf_mcp_server.py --transport stdio
    ```
 
 3. **Deploy to Smithery**
