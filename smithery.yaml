@@ -2,8 +2,12 @@
 # Documentation: https://smithery.ai/docs/build/project-config/smithery-yaml
 
 startCommand:
-  # Type of MCP server (stdio for Python FastMCP servers)
-  type: stdio
+  # Hosted deployments on Smithery require HTTP transport
+  type: http
+
+  httpServer:
+    port: 8000
+    healthCheckPath: /healthz
   
   # JSON Schema defining the configuration options
   configSchema:
@@ -27,12 +31,24 @@ startCommand:
   # Function that produces the CLI command to start the MCP server
   commandFunction: |
     (config) => {
+      const port = 8000;
       return {
         command: 'python',
-        args: ['shelf_mcp_server.py'],
+        args: [
+          'shelf_mcp_server.py',
+          '--transport',
+          'streamable-http',
+          '--host',
+          '0.0.0.0',
+          '--port',
+          String(port)
+        ],
         env: {
           SHELF_API_KEY: config.shelfApiKey,
           SHELF_API_BASE_URL: config.apiBaseUrl || 'https://api.shelf.im/v1',
+          MCP_TRANSPORT: 'streamable-http',
+          MCP_HOST: '0.0.0.0',
+          MCP_PORT: String(port),
           PYTHONUNBUFFERED: '1'
         }
       };

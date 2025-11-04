@@ -135,7 +135,7 @@ shelf-mcp-server/
 Ce fichier est **CRITIQUE**. Il doit :
 - Être à la racine du repository
 - Avoir la syntaxe YAML correcte
-- Définir le type de serveur (stdio pour Python)
+- Définir le type de serveur (http pour un déploiement hébergé Smithery)
 - Spécifier le configSchema
 - Inclure le commandFunction
 

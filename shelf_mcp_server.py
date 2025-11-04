@@ -20,8 +20,11 @@ Features:
 from typing import Any, Literal, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, field_validator
+import argparse
 import httpx
 import os
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 from mcp.server.fastmcp import FastMCP
 
 # Constants
@@ -31,6 +34,13 @@ API_KEY = os.getenv("SHELF_API_KEY", "")
 
 # Initialize FastMCP server
 mcp = FastMCP("shelf")
+
+# Health check endpoint for hosted deployments
+@mcp.custom_route("/healthz", methods=["GET"], include_in_schema=False)
+async def health_check(_: Request) -> JSONResponse:
+    """Simple health check endpoint used for HTTP deployments."""
+    return JSONResponse({"status": "ok"})
+
 
 
 # ============================================================================
@@ -740,8 +750,7 @@ async def get_trending_on_shelf() -> str:
 
 def main():
     """Run the Shelf MCP server"""
-    import asyncio
-    
+
     # Verify API key is set
     if not API_KEY:
         print("=" * 70)
@@ -755,10 +764,57 @@ def main():
         print("\nThe server will start but tools will return errors without valid credentials.")
         print("=" * 70)
         print()
-    
-    # Run the MCP server
-    mcp.run()
+
+    parser = argparse.ArgumentParser(description="Run the Shelf MCP server")
+    default_transport = os.getenv("MCP_TRANSPORT", "streamable-http")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default=default_transport,
+        help="Transport to use when starting the server (default: streamable-http)",
+    )
+    parser.add_argument(
+        "--host",
+        default=os.getenv("MCP_HOST", mcp.settings.host),
+        help="Host interface to bind the server to",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.getenv("MCP_PORT", str(mcp.settings.port))),
+        help="Port to expose the HTTP server on",
+    )
+    parser.add_argument(
+        "--mount-path",
+        default=os.getenv("MCP_MOUNT_PATH", mcp.settings.mount_path),
+        help="Mount path for SSE transport",
+    )
+    parser.add_argument(
+        "--stream-path",
+        default=os.getenv("MCP_STREAM_PATH", mcp.settings.streamable_http_path),
+        help="Path prefix for the streamable HTTP transport",
+    )
+
+    args = parser.parse_args()
+
+    # Update FastMCP settings from CLI / environment
+    mcp.settings.host = args.host
+    mcp.settings.port = args.port
+    mcp.settings.mount_path = args.mount_path
+    mcp.settings.streamable_http_path = args.stream_path
+
+    if args.transport == "streamable-http":
+        print(
+            f"Starting Shelf MCP server via HTTP on http://{mcp.settings.host}:{mcp.settings.port}{mcp.settings.streamable_http_path}"
+        )
+    elif args.transport == "sse":
+        print(
+            f"Starting Shelf MCP server via SSE on http://{mcp.settings.host}:{mcp.settings.port}{mcp.settings.mount_path}"
+        )
+
+    mcp.run(transport=args.transport, mount_path=args.mount_path if args.transport == "sse" else None)
 
 
 if __name__ == "__main__":
     main()
+

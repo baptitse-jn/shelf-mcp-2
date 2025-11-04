@@ -136,7 +136,10 @@ Le fichier `smithery.yaml` doit être à la racine du repo :
 
 ```yaml
 startCommand:
-  type: stdio
+  type: http
+  httpServer:
+    port: 8000
+    healthCheckPath: /healthz
   configSchema:
     type: object
     required:
@@ -150,19 +153,31 @@ startCommand:
         type: string
         title: "API Base URL"
         default: "https://api.shelf.im/v1"
-  
+
   commandFunction: |
     (config) => {
+      const port = 8000;
       return {
         command: 'python',
-        args: ['shelf_mcp_server.py'],
+        args: [
+          'shelf_mcp_server.py',
+          '--transport', 'streamable-http',
+          '--host', '0.0.0.0',
+          '--port', String(port)
+        ],
         env: {
           SHELF_API_KEY: config.shelfApiKey,
-          SHELF_API_BASE_URL: config.apiBaseUrl || 'https://api.shelf.im/v1'
+          SHELF_API_BASE_URL: config.apiBaseUrl || 'https://api.shelf.im/v1',
+          MCP_TRANSPORT: 'streamable-http',
+          MCP_HOST: '0.0.0.0',
+          MCP_PORT: String(port)
         }
       };
     }
 ```
+
+> 💡 Pour les tests locaux avec le SDK MCP en mode stdio, lancez le serveur avec `python shelf_mcp_server.py --transport stdio`.
+
 
 ### 2. Tester localement
 
@@ -175,8 +190,8 @@ pip install -r requirements.txt
 # Définir l'API key de test
 export SHELF_API_KEY="your-test-key"
 
-# Tester le serveur
-python shelf_mcp_server.py &
+# Lancer le serveur HTTP (transport requis par Smithery)
+python shelf_mcp_server.py --transport streamable-http --host 0.0.0.0 --port 8000 &
 SERVER_PID=$!
 
 # Le serveur devrait démarrer sans erreur
@@ -432,7 +447,7 @@ docker run shelf-mcp-test
 
 ```bash
 # Vérifier que le serveur démarre
-python shelf_mcp_server.py
+python shelf_mcp_server.py --transport streamable-http --host 0.0.0.0 --port 8000
 
 # Vérifier les dépendances
 pip install -r requirements.txt --dry-run
